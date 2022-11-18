@@ -1,0 +1,7 @@
+---
+- name: Register host
+  redhat_subscription:
+    state: present
+    org_id: "{{ organization }}"
+    activationkey: "{{ activation_key }}"
+  when: "satellite_hostname not in hostvars['dummy']['hosts_deployed']"

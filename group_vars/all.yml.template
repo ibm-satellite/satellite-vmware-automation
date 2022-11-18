@@ -1,0 +1,138 @@
+# Defintion for the Satellite nodes hardware 
+# you can add multiple machines with the following information
+# - name: Name of the host (the sat_host_prefix is added to this name when creating the virtual machine)
+#   id: id of the virtual machine
+#   disk_size: disk size in GB
+#   disk_type: type of disk to be created
+#   host_prefix: 
+#   ip:
+#   netmask: CIDR format NOT suported 
+#   gateway:
+#   memory: size of memory in Mb
+#   vcpu: Number of vcpu's
+#   notes: This field must be 'controlplane' for controlplane nodes or 'worker' for worker nodes
+satellite_virtual_machines:
+  - name: cn01
+    id: controlplane1
+    disk_size: 100
+    disk_type: thin
+    host_prefix: controlplane
+    ip: 192.168.2.100
+    netmask: 255.255.255.0
+    gateway: 192.168.2.1
+    memory: 16384
+    vcpu: 4
+    notes: controlplane
+  - name: cn02
+    id: controlplane2
+    disk_size: 100
+    disk_type: thin
+    host_prefix: controlplane
+    ip: 192.168.2.101
+    netmask: 255.255.255.0
+    gateway: 192.168.2.1
+    memory: 16384
+    vcpu: 4
+    notes: controlplane
+  - name: cn03
+    id: controlplane3
+    disk_size: 100
+    disk_type: thin
+    host_prefix: controlplane
+    ip: 192.168.2.102
+    netmask: 255.255.255.0
+    gateway: 192.168.2.1
+    memory: 16384
+    vcpu: 4
+    notes: controlplane
+  - name: wk01
+    id: worker1
+    disk_size: 100
+    disk_type: thin
+    host_prefix: worker
+    ip: 192.168.2.103
+    netmask: 255.255.255.0
+    gateway: 192.168.2.1
+    memory: 16384
+    vcpu: 4
+    notes: worker
+  - name: wk02
+    id: worker2
+    disk_size: 100
+    disk_type: thin
+    host_prefix: worker
+    ip: 192.168.2.104
+    netmask: 255.255.255.0
+    gateway: 192.168.2.1
+    memory: 16384
+    vcpu: 4
+    notes: worker
+  - name: wk03
+    id: worker3
+    disk_size: 100
+    disk_type: thin
+    host_prefix: worker
+    ip: 192.168.2.105
+    netmask: 255.255.255.0
+    gateway: 192.168.2.1
+    memory: 16384
+    vcpu: 4
+    notes: worker
+  - name: wk04
+    id: worker4
+    disk_size: 100
+    disk_type: thin
+    host_prefix: worker
+    ip: 192.168.2.106
+    netmask: 255.255.255.0
+    gateway: 192.168.2.1
+    memory: 16384
+    vcpu: 4
+    notes: worker
+
+#Jumphost information 
+
+create_jumphost: true #if a jumphost is needed must be true, else set it to failed
+# No need to assign values to this variables (next 3 lines) if create_jumphost is set to false
+jumphost:
+  ip: "10.45.131.80"
+  user: "root"
+
+
+external_url: www.google.ro
+sat_host_dns_server: 8.8.8.8
+sat_host_domain_name: ""
+ibmcloud_api_key: "{{ vault_ibmcloud_api_key }}"
+vault_ibmcloud_api_key: ""
+satellite_location_name: ""
+# ibmcloud ks locations
+satellite_location_manage_from: ""
+# ibmcloud resource groups
+satellite_location_resource_group: ""
+satellite_location_region: ""
+sat_host_prefix: ""
+
+#Redhat details needed for registration
+
+#redhat_username: "{{ vault_redhat_user }}"
+#redhat_password: "{{ vault_redhat_password }}"
+organization: ""
+activation_key: ""
+
+#VmWare connection details
+
+vcenter_hostname: ""
+vcenter_username: ""
+vcenter_password: ""
+
+vmware_datacenter: "IBMCloud"
+vmware_datastore: "workload_share_Jc5ar"
+vmware_cluster: "vcs-zm-consolidated"
+vmware_network: "T0-192-168-2-0"
+vmware_template: "RHEL79-TEMPLATE"
+vmware_folder: "SATELLITE"
+
+#template information
+
+host_user: "root"
+host_password: "password4ansible"

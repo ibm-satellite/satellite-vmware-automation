@@ -1,0 +1,11 @@
+Satellite hosts status
+--------------------------------------------------------
+{% for host in alive_hosts.results %} 
+
+Host "{{ host.invocation.module_args.host }}" contactable via ssh: {% if host.failed|bool == True %} FAILED {% else %} SUCCESS{% endif %}
+
+{% endfor %}
+
+
+--------------------------------------------------------
+check network configuration for the uncontactable hosts

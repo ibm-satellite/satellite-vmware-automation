@@ -1,0 +1,18 @@
+=== VmWare infrastructure report ===
+
+Datacenter {{ vmware_datacenter }}: {% if datacenter_exists|default('false')|bool == true %} OK {% else %} NOT OK {% endif %}
+
+Cluster {{ vmware_cluster }}: {% if cluster_exists|default('false')|bool == true %} OK {% else %} NOT OK {% endif %}
+
+Datastore {{ vmware_datastore }}: {% if datastore_exists|default('false')|bool == true %} OK {% else %} NOT OK {% endif %}
+
+Network {{ vmware_network }}: {% if network_exists|default('false')|bool == true %} OK {% else %} NOT OK {% endif %}
+
+Template {{ vmware_template }}: {% if template_exists|default('false')|bool == true %} OK {% else %} NOT OK {% endif %}
+
+Folder {{ vmware_folder }}: {% if folder_exists|default('false')|bool == true %} OK {% else %} NOT OK {% endif %}
+
+
+====================================
+For the items marked "NOT OK" check inventory for errors
+or create the resources in the vmware infrastructure

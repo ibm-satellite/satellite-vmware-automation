@@ -1,0 +1,46 @@
+- name: Deploy virtual machines from template
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: false
+    folder: "{{ vmware_folder  }}"
+    datacenter: "{{ vmware_datacenter }}"
+    name: "{{ item.host_prefix }}-{{ item.name }}"
+    state: poweredon
+    guest_id: "{{ item.id }}"
+    annotation: "{{ item.notes }}"
+    disk:
+    - size_gb: "{{ item.disk_size }}" 
+      type: "{{ item.disk_type }}"
+      datastore: "{{ item.vmware_datastore }}"
+    - size_gb: 100 
+      type: "{{ item.disk_type }}"
+      datastore: "{{ item.vmware_datastore }}"
+    # - size_gb: 100 
+    #   type: "{{ item.disk_type }}"
+    #   datastore: "{{ item.vmware_datastore }}"
+    # - size_gb: 500 
+    #   type: "{{ item.disk_type }}"
+    #   datastore: "{{ item.vmware_datastore }}"
+    networks:
+    - name: "{{ vmware_network }}"
+      ip: "{{ item.ip }}"
+      netmask: "{{ item.netmask }}"
+      gateway: "{{ item.gateway }}"
+      dns_servers:
+      - "{{ sat_host_dns_server }}"
+    hardware:
+      hotadd_cpu: True
+      hotremove_cpu: True
+      hotadd_memory: True
+      memory_mb: "{{ item.memory }}"
+      num_cpus: "{{ item.vcpu }}"
+    customization:
+      dns_servers:
+      - "{{ sat_host_dns_server }}"
+      domain : "{{ sat_host_domain_name }}"
+      hostname: "{{ sat_host_prefix }}{{ item.name }}"
+    template: "{{ vmware_template }}"
+    wait_for_ip_address: yes
+  loop: "{{ virtual_machines }}"

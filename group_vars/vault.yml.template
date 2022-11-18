@@ -1,0 +1,18 @@
+---
+
+
+#the next two variables are used when you register the host with the redhat account, you have to uncoment them when using redhat account for registration
+#vault_redhat_user: << RedHat account username to register RHEL7 VMs  (ex. rhusername)>>
+#vault_redhat_password: << RedHat account password >>
+
+#the next two variables are used when you register the host using activation key, you need to uncomment them when using the activation key
+#vault_organization: ""
+#vault_activation_key: ""
+
+vault_vcenter_username: ""
+vault_vcenter_password: "" 
+vault_root_password: ""
+
+vault_ibmcloud_api_key: ""
+
+

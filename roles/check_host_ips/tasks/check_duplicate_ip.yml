@@ -1,0 +1,17 @@
+---
+- name: Initialise variable for duplicates
+  set_fact:
+    duplicates_found: 0
+
+- name: Check {{ ip.ip }} for duplicate declaration
+  set_fact:
+    duplicates_found: "{{ duplicates_found|int + 1 }}"
+  when: "ip.ip == item.ip"
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+
+- name: Add ip to list if duplicated
+  set_fact:
+    duplicate_ips: "{{ duplicate_ips + [ ip.ip ] }}"
+  when: "duplicates_found|int > 1"

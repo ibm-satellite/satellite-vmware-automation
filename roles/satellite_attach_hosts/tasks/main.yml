@@ -1,0 +1,55 @@
+---
+- name: Register host using Ak
+  include_tasks: register_with_ak.yml
+  when: "organization is defined"
+
+- name: Register host using rhn account
+  include_tasks: register_with_account.yml
+  when: "organization is not defined"
+
+- name: Enable repositories
+  rhsm_repository:
+    name:
+      - rhel-7-server-extras-rpms
+      - rhel-7-server-optional-rpms
+      - rhel-7-server-rpms
+      - rhel-server-rhscl-7-rpms
+      - rhel-7-server-rh-common-rpms
+      - rhel-7-server-supplementary-rpms
+    state: enabled
+  when: "satellite_hostname not in hostvars['dummy']['hosts_deployed']"
+
+- name: Create Satellite cloud
+  block:
+  - name: Create resource group
+    ibm.cloudcollection.ibm_resource_group:
+      name: "{{ satellite_location_resource_group }}"
+      ibmcloud_api_key: "{{ ibmcloud_api_key }}" 
+
+  - name: Get resource group
+    ibm.cloudcollection.ibm_resource_group:
+      name: "{{ satellite_location_resource_group }}"
+      ibmcloud_api_key: "{{ ibmcloud_api_key }}" 
+    register: satellite_resource_group
+
+  - name: Create location
+    ibm.cloudcollection.ibm_satellite_location:
+      ibmcloud_api_key: "{{ ibmcloud_api_key }}" 
+      location: "{{ satellite_location_name }}"
+      managed_from: "{{ satellite_location_manage_from }}"
+      resource_group_id: "{{ satellite_resource_group.resource.id }}"
+
+  - name: Get attach host script
+    ibm.cloudcollection.ibm_satellite_attach_host_script_info:
+      ibmcloud_api_key: "{{ ibmcloud_api_key }}"
+      location: "{{ satellite_location_name }}"
+      host_provider: linux_kvm
+    register: attach_host_script
+
+  become: false
+  run_once: true
+  delegate_to: localhost
+
+- name: Execute script on new hosts
+  script: "{{ attach_host_script.resource.script_path }}"
+  when: "satellite_hostname not in hostvars['dummy']['hosts_deployed'] " 

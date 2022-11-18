@@ -1,0 +1,121 @@
+---
+- name: Check inventory values
+  block:
+  - name: Get datacenter info
+    community.vmware.vmware_datacenter_info:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: false
+    register: datacenter_info
+
+  - name: Gather cluster info from given datacenter
+    community.vmware.vmware_cluster_info:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ vmware_datacenter }}"
+      #cluster_name: "{{ vmware_cluster }}"
+      validate_certs: false
+      schema: vsphere
+      properties:
+        - name
+    register: cluster_info
+
+  - name: Get datastore info
+    community.vmware.vmware_datastore_info:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter_name: "{{ vmware_datacenter }}"
+      validate_certs: false
+    register: datastore_info
+
+  - name: Check if datacenter exists
+    set_fact:
+      datacenter_exists: true
+    when: "vmware_datacenter == item.name"
+    loop: "{{ datacenter_info.datacenter_info }}"
+
+  - name: Check if datastore exists
+    set_fact:
+      datastore_exists: true
+    when: "vmware_datastore == item.name"
+    loop: "{{ datastore_info.datastores }}"
+
+  - name: Set fact
+    set_fact:
+      cluster_list: "{{ cluster_info.clusters.keys() | list }}"
+
+  - name: Check if cluster exists
+    set_fact:
+      cluster_exists: true
+    when: "vmware_cluster == item"
+    loop: "{{ cluster_list }}"
+
+  - name: Login in vmware api
+    uri:
+      url: "https://{{ vcenter_hostname }}/rest/com/vmware/cis/session"
+      method: POST
+      user: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      force_basic_auth: true
+      validate_certs: false
+    register: login
+    no_log: true
+
+  - name: Get network list
+    uri:
+      url: https://{{ vcenter_hostname }}/rest/vcenter/network
+      force_basic_auth: true
+      validate_certs: false
+      headers:
+        Cookie: "{{ login.set_cookie }}"
+    register: test
+
+  - name: Check if network exists
+    set_fact:
+      network_exists: true
+    when: "vmware_network == item.name"
+    loop: "{{ test.json.value }}"
+
+  - name: Get virtual machine templates
+    community.vmware.vmware_vm_info:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      vm_type: template
+      validate_certs: false
+    register: vmware_templates
+
+  - name: Check if template exists
+    set_fact:
+      template_exists: true
+    when: "vmware_template == item.guest_name"
+    loop: "{{ vmware_templates.virtual_machines }}"
+
+  - name: Get folder list
+    community.vmware.vmware_folder_info:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ vmware_datacenter }}"
+      validate_certs: false
+    register: vmware_folders
+
+  - name: Check if folder exists
+    set_fact:
+      folder_exists: true
+    when: "vmware_folder == item.path"
+    loop: "{{ vmware_folders.flat_folder_info }}"
+
+  - name: Generate report
+    template:
+      src: report.j2
+      dest: /tmp/ibmcloud_vmware_check.log
+  
+  - name: Fail play if items are not present
+    fail:
+      msg: "Some of the items are wrong, check /tmp/ibmcloud_vmware_check.log for the errors"
+    when: datacenter_exists|default('false')|bool == false or cluster_exists|default('false')|bool == false or datastore_exists|default('false')|bool == false or network_exists|default('false')|bool == false or template_exists|default('false')|bool == false or folder_exists|default('false')|bool == false 
+  delegate_to: localhost

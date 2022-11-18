@@ -1,0 +1,37 @@
+---
+- name: Add controlplane hosts to the inventory
+  add_host:
+    name: "{{ item.ip }}"
+    groups: satellite_controlplanes
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  when: "'controlplane' in item.notes"
+
+- name: Add worker hosts to the inventory
+  add_host:
+    name: "{{ item.ip }}"
+    groups: satellite_workers
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  when: "'worker' in item.notes"
+
+- name: Add extra variables for the hosts
+  add_host:
+    name: "{{ item.ip }}"
+    satellite_hostname: "{{ sat_host_prefix }}{{ item.name }}"
+    vmware_datastore: "{{ item.vmware_datastore }}"
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+    ansible_user: "{{ host_user }}"
+    ansible_password: "{{ host_password }}"
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+
+- name: show all the hosts matching the pattern, i.e. all but the group www
+  debug:
+    msg: "{{ item }}"
+  with_inventory_hostnames:
+    - all
+  

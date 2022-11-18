@@ -1,0 +1,20 @@
+Satellite host network status
+--------------------------------------------------------
+{% for host in url_access.results %}
+Host {{ host.item.ip }} can contact {{ external_url }}: {% if host.status|int == 200 %} SUCCESS {% else %} FAILED {% endif %}
+
+{% endfor %}
+
+
+{% for dig in dig_result %}
+Host {{ dig.host }} can contact dns server: {% if dig.dig == "" %} FAILED {% else %} SUCCESS {% endif %}
+
+{% endfor %}
+
+
+{% for command in hostnames.results %}
+Execute commands on host {{ command.item.ip }}: {% if command.rc == 0 %} SUCCESS {% else %} FAIL {% endif %}
+
+{% endfor %}
+
+

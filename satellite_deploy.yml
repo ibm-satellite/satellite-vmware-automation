@@ -1,0 +1,72 @@
+---
+- name: Prepare environment for Satellite on-premise deploy
+  hosts: localhost
+  gather_facts: false
+  become: false
+  vars_files: group_vars/vault.yml
+
+  pre_tasks:
+
+  - name: Initialize deployed_hosts
+    set_fact:
+      deployed_hosts: []
+  - block:
+    - name: Check if location exists
+      ibm.cloudcollection.ibm_satellite_location_info:
+        ibmcloud_api_key: "{{ vault_ibmcloud_api_key }}"
+        location: "{{ satellite_location_name }}"
+      register: result
+
+    - name: Create array with deployed hosts
+      set_fact:
+        deployed_hosts: "{{ deployed_hosts + [ item.host_name ] }}"
+      loop: "{{ result.resource.hosts }}"
+      loop_control:
+        label: "{{ item.host_name }}"
+
+    - name: Set virtual_machines
+      set_fact:
+        virtual_machines: "{{ satellite_virtual_machines }}"
+
+    - name: Create virtual_machines list
+      include_tasks: create_virtual_machines_list.yml
+      loop: "{{ satellite_virtual_machines }}"
+      loop_control:
+        loop_var: satellite_hosts
+        label: "{{ satellite_hosts.ip }}"
+
+    rescue:
+    - name: Set virtual_machines
+      set_fact:
+        virtual_machines: "{{ satellite_virtual_machines }}"
+
+  - name: Register value for next play
+    add_host:
+      name: dummy
+      hosts_deployed: "{{ deployed_hosts }}"
+
+  - name: Create inventory without jumphost
+    include_tasks: create_inventory.yml
+    when: "not create_jumphost|bool"
+
+  - name: Create inventory with jumphost
+    include_tasks: create_inventory_with_jumphost.yml
+    when: "create_jumphost|bool"
+
+  roles:
+  - check_host_ips
+  - check_vmware
+  - satellite_create_hosts
+  - check_satellite_hosts
+
+- name: Deploy Satellite on-premise
+  hosts:
+    - satellite_controlplanes
+    - satellite_workers
+  gather_facts: false
+  become: false
+  vars_files: group_vars/vault.yml
+
+  roles:
+  - satellite_create_location
+  - satellite_attach_hosts

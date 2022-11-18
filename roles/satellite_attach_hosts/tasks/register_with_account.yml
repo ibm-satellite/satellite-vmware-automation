@@ -1,0 +1,8 @@
+---
+- name: Register host
+  redhat_subscription:
+    state: present
+    username: "{{ redhat_username }}"
+    password: "{{ redhat_password }}"
+    auto_attach: true
+  when: "satellite_hostname not in hostvars['dummy']['hosts_deployed']"

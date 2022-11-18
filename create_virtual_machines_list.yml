@@ -1,0 +1,9 @@
+---
+- name: Create virtual_machines list
+  set_fact:
+    virtual_machines: "{{ virtual_machines|difference([ satellite_hosts ]) }}"
+  loop: "{{ result.resource.hosts }}"
+  loop_control:
+    label: "{{ item.host_name }}"
+  when: "satellite_hosts.name in item.host_name" 
+

@@ -1,0 +1,20 @@
+---
+- name: Check if {{ host.ip }} can contact the other hosts
+  wait_for:
+    host: "{{ item.ip }}"
+    port: 22
+    timeout: 1
+  delegate_to: "{{ host.ip }}"
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  register: ssh_connection
+
+- name: Add to log file
+  lineinfile:
+    line: "Host {{ host.ip }} can contact {{ item.item.ip }}: SUCCESS"
+    path: /tmp/satellite_network_check.log
+  when: "not item.failed"
+  loop: "{{ ssh_connection.results }}"
+  loop_control:
+    label: item.item.ip

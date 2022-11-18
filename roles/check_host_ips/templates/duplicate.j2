@@ -1,0 +1,8 @@
+Duplicate ip declaration found
+----------------------------------------------------------------------
+{% for ip in duplicate_ips %} 
+The {{ ip }} is declared twice in the inventory
+{% endfor %}
+----------------------------------------------------------------------
+
+Check group_vars/all.yml the virtual_machines section and fix the error

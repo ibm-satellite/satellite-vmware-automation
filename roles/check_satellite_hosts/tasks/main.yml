@@ -1,0 +1,69 @@
+---
+- name: Check if hosts are contactable
+  wait_for:
+    host: "{{ item.ip }}"
+    port: 22
+    timeout: 1
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  ignore_errors: true
+  register: alive_hosts
+
+- name: Create report
+  template:
+    src: alive_hosts.j2
+    dest: /tmp/ibmcloud_host_check.log
+    mode: "0664"
+
+- name: Fail play if any host is down
+  fail:
+    msg: "Not all hosts are contactable via ssh. Check /tmp/ibmcloud_host_check.log for details"
+  when: "item.failed|bool"
+  loop: "{{ alive_hosts.results }}"
+  loop_control:
+    label: "{{ item.item.ip }}"
+
+- name: Check if we can execute commands on satellite nodes
+  command: hostname
+  delegate_to: "{{ item.ip }}"
+  loop: "{{ virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  register: hostnames
+  ignore_errors: true
+
+- name: Check Internet access from the hosts
+  uri:
+    url: "https://{{ external_url }}"
+    validate_certs: false
+    return_content: false
+    status_code: 200
+  ignore_errors: true
+  register: url_access
+  delegate_to: "{{ item.ip }}"
+  loop: "{{ virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+
+- name: Check DNS connectivity
+  set_fact:
+    dig_result: "{{ dig_result|default([]) + [ { 'host' : item.ip, 'dig' : lookup('dig','cloud.ibm.com') } ] }}"
+  ignore_errors: true
+  delegate_to: "{{ item.ip }}"
+  loop: "{{ virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+
+- name: Generate Report
+  template:
+    src: network_setting.j2
+    dest: /tmp/satellite_network_check.log
+    mode: "0664"
+
+- name: Check if hosts can contact eachother
+  include_tasks: satellite_host_connectivity.yml
+  loop: "{{ virtual_machines }}"
+  loop_control:
+    loop_var: host
+    label: "{{ host.ip }}"

@@ -1,0 +1,22 @@
+---
+- name: Initialize duplicate ip variable
+  set_fact:
+    duplicate_ips: []
+
+- name: Check for duplicate ips
+  include_tasks: check_duplicate_ip.yml
+  loop: "{{ virtual_machines }}"
+  loop_control:
+    loop_var: ip
+    label: "{{ ip.ip }}"
+
+- name: Generate log if duplicate ips are found
+  template:
+    src: duplicate.j2
+    dest: /tmp/ibmcloud_duplicate_ip.log
+  when: "duplicate_ips|length > 0" 
+
+- name: Fail play if duplicates found
+  fail:
+    msg: "Duplicate ip's found, check /tmp/ibmcloud_duplicate_ip.log for details"
+  when: "duplicate_ips|length > 0" 

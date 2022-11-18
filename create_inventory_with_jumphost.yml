@@ -1,0 +1,33 @@
+---
+- name: Add controlplane hosts to the inventory
+  add_host:
+    name: "{{ item.ip }}"
+    groups: satellite_controlplanes
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q {{ host_user }}@{{ jumphost.ip }}"'
+    ansible_user: "{{ host_user }}"
+    ansible_ssh_pass: "{{ host_password }}"
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  when: "'controlplane' in item.notes"
+
+- name: Add worker hosts to the inventory
+  add_host:
+    name: "{{ item.ip }}"
+    groups: satellite_workers
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q {{ host_user }}@{{ jumphost.ip }}"'
+    ansible_user: "{{ host_user }}"
+    ansible_ssh_pass: "{{ host_password }}"
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  when: "'worker' in item.notes"
+
+- name: Add extra variables for the hosts
+  add_host:
+    name: "{{ item.ip }}"
+    satellite_hostname: "{{ sat_host_prefix }}{{ item.name }}"
+  loop: "{{ satellite_virtual_machines }}"
+  loop_control:
+    label: "{{ item.ip }}"
+  
